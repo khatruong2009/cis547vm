@@ -23,41 +23,41 @@ Lastly, use the above computed results to calculate Precision, Recall,
 and F-Measure scores for each analyzer on this suite of programs.
 
 ===========================================================================
-| Program   | Ground Truth  |     AFL      | IKOS Interval |   IKOS DBM   |
+| Program   |      Ground Truth  |           AFL      |       IKOS Interval |         IKOS DBM   |
 |=========================================================================|
-| test0.c   |               |              |               |              |
-| test1.c   |               |              |               |              |
-| test2.c   |               |              |               |              |
-| test3.c   |               |              |               |              |
-| test4.c   |               |              |               |              |
-| test5.c   |               |              |               |              |
-| test6.c   |               |              |               |              |
-| test7.c   |               |              |               |              |
-| test8.c   |               |              |               |              |
-| test9.c   |               |              |               |              |
+| test0.c   |       right        |       accept       |       accept        |       accept       |
+| test1.c   |       right        |       reject       |       reject        |       reject       |
+| test2.c   |       wrong        |       reject       |       reject        |       reject       |
+| test3.c   |       wrong        |       accept       |       reject        |       reject       |
+| test4.c   |       right        |       accept       |       reject        |       accept       |
+| test5.c   |       right        |       accept       |       reject        |       reject       |
+| test6.c   |       wrong        |       reject       |       reject        |       reject       |
+| test7.c   |       right        |       reject       |       reject        |       reject       |
+| test8.c   |       right        |       accept       |       reject        |       reject       |
+| test9.c   |       right        |       reject       |       reject        |       reject       |
 |=========================================================================|
-| Precision |     ---       |     ---      |     ---       |     ---      |
-| Recall    |     ---       |     ---      |     ---       |     ---      |
-| F-measure |     ---       |     ---      |     ---       |     ---      |
+| Precision |          ---       |        .4          |     .33             |     .375           |
+| Recall    |          ---       |        .67         |     1               |     1              | 
+| F-measure |          ---       |        .5          |     .5              |     .54            |
 ===========================================================================
 
 Part B: Answer the below questions. Provide short
 explanations to justify your answers.
 
 Question 1: From the given programs, can AFL be a sound analysis? Can it be complete?
-Answer:
+Answer: AFL can not be a sound analysis because it accepted a wrong program. It is also not complete because it did not accept all the correct programs.
 
 
 
 
 Question 2: From the given programs, can IKOS interval be a sound analysis? Can it be complete?
-Answer:
+Answer: IKOS interval is sound because it did not accept any incorrect programs. It is not complete because it did not accept all of the correct programs.
 
 
 
 
 Question 3: From the given programs, can IKOS DBM be a sound analysis? Can it be complete?
-Answer:
+Answer: IKOS DBM is sound because it did not accept any incorrect programs. It is not complete because it did not accept all of the correct programs.
 
 
 
@@ -67,7 +67,7 @@ domains in IKOS to find divide-by-zero errors?  Comment
 on both the accuracy and cost of the analyzer under these two domains.
 
 Answer:
-
+The Interval and DBM are both sound but the Interval method was less complete. Also, for most of the tests, DBM took less time than Interval did. 
 
 
 
