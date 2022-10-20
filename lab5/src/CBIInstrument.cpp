@@ -73,14 +73,21 @@ namespace instrument
        */
 
       // do dyn cast of Inst and then check to see if the branch is conditional - using isConditional function that can be dereferenced from branch - use this to pass in the Branch argument for instrument branch (cond)
-      auto *instruction = dyn_cast<BranchInst>(&Inst);
-      if (instruction->isConditional())
+
+      if (auto *instruction = dyn_cast<BranchInst>(&Inst))
       {
-        instrumentBranch(M, instruction, Line, Col);
+        if (instruction->isConditional())
+        {
+          instrumentBranch(M, instruction, Line, Col);
+        }
       }
       else if (auto *call = dyn_cast<CallInst>(&Inst))
       {
-        instrumentReturn(M, call, Line, Col);
+        // check call for getType integer to make sure the integer is 32 bits long
+        if (call->getType()->isIntegerTy(32))
+        {
+          instrumentReturn(M, call, Line, Col);
+        }
       }
 
       // if the call instruction has a return type of int 32, call instrumentReturn
@@ -101,9 +108,10 @@ namespace instrument
      */
     auto LineVal = ConstantInt::get(Int32Type, Line);
     auto ColVal = ConstantInt::get(Int32Type, Col);
+    auto cond = Branch->getCondition();
 
     // add in condition as argument from dereferenced branch argument
-    std::vector<Value *> Args = {LineVal, ColVal, Branch};
+    std::vector<Value *> Args = {LineVal, ColVal, cond};
 
     auto *branchFunction = M->getFunction(CBI_BRANCH_FUNCTION_NAME);
     CallInst::Create(branchFunction, Args, "", Branch);
@@ -128,8 +136,8 @@ namespace instrument
     // add call as argument - don't need to dereference
     std::vector<Value *> Args = {LineVal, ColVal, Call};
 
-    auto *branchFunction = M->getFunction(CBI_BRANCH_FUNCTION_NAME);
-    CallInst::Create(branchFunction, Args, "", Call);
+    auto *returnFunction = M->getFunction(CBI_RETURN_FUNCTION_NAME);
+    CallInst::Create(returnFunction, Args, "", Call->getNextNode());
   }
 
   char CBIInstrument::ID = 1;

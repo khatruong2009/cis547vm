@@ -217,9 +217,9 @@ class PredicateInfo:
         """
         # TODO: Implement the calculation of the failure value.
 
-        if (self.s == 0):
+        if ((self.f + self.s) == 0):
             return 0
-        else: 
+        else:
             f = self.f / (self.f + self.s)
             return f
 
@@ -232,7 +232,7 @@ class PredicateInfo:
         """
         # TODO: Implement the calculation of the context value.
 
-        if (self.s_obs == 0):
+        if ((self.s_obs + self.f_obs) == 0):
             return 0
         else:
             context = self.f_obs / (self.f_obs + self.s_obs)
@@ -246,13 +246,8 @@ class PredicateInfo:
         :return: The increase value.
         """
         # TODO: Implement the calculation of the increase value.
-        if (self.s == 0 or self.s_obs == 0):
-            return 0
-        else:
-            failure = self.f / (self.f + self.s)
-            context = self.f_obs / (self.f_obs + self.s_obs)
-            increase = failure - context
-            return increase
+        increase = self.failure - self.context
+        return increase
 
     """
     Helper methods that map variable names to names in lecture slides.
@@ -347,8 +342,10 @@ class Report:
         sorted_predicate_info = sorted(
             self.predicate_info_list, key=lambda pred_info: pred_info.predicate
         )
-        s_p = "\n".join(f"{info.predicate}: {info.s}" for info in sorted_predicate_info)
-        f_p = "\n".join(f"{info.predicate}: {info.f}" for info in sorted_predicate_info)
+        s_p = "\n".join(
+            f"{info.predicate}: {info.s}" for info in sorted_predicate_info)
+        f_p = "\n".join(
+            f"{info.predicate}: {info.f}" for info in sorted_predicate_info)
         failure = "\n".join(
             f"{info.predicate}: {info.failure}" for info in sorted_predicate_info
         )
