@@ -40,52 +40,60 @@ namespace dataflow
     if (auto *binary = dyn_cast<BinaryOperator>(Inst))
     {
       auto inMemory = InMap[Inst];
-      std::cout << inMemory[Inst->getName()];
-      return true;
+
+      if (binary->getOpcode() == Instruction::SDiv || binary->getOpcode() == Instruction::UDiv)
+      {
+
+        auto divisorDomain = getOrExtract(inMemory, binary->getOperand(1));
+        if (divisorDomain->Value == Domain::MaybeZero || divisorDomain->Value == Domain::Zero)
+        {
+          return true;
+        }
+      }
     }
 
     return false;
   }
+
+  bool DivZeroAnalysis::runOnFunction(Function &F)
+  {
+    outs() << "Running " << getAnalysisName() << " on " << F.getName() << "\n";
+
+    // Initializing InMap and OutMap.
+    for (inst_iterator Iter = inst_begin(F), End = inst_end(F); Iter != End; ++Iter)
+    {
+      auto Inst = &(*Iter);
+      InMap[Inst] = new Memory;
+      OutMap[Inst] = new Memory;
+    }
+
+    // The chaotic iteration algorithm is implemented inside doAnalysis().
+    doAnalysis(F);
+
+    // Check each instruction in function F for potential divide-by-zero error.
+    for (inst_iterator Iter = inst_begin(F), End = inst_end(F); Iter != End; ++Iter)
+    {
+      auto Inst = &(*Iter);
+      if (check(Inst))
+        ErrorInsts.insert(Inst);
+    }
+
+    printMap(F, InMap, OutMap);
+    outs() << "Potential Instructions by " << getAnalysisName() << ": \n";
+    for (auto Inst : ErrorInsts)
+    {
+      outs() << *Inst << "\n";
+    }
+
+    for (auto Iter = inst_begin(F), End = inst_end(F); Iter != End; ++Iter)
+    {
+      delete InMap[&(*Iter)];
+      delete OutMap[&(*Iter)];
+    }
+    return false;
+  }
+
+  char DivZeroAnalysis::ID = 1;
+  static RegisterPass<DivZeroAnalysis> X("DivZero", "Divide-by-zero Analysis", false, false);
+  // namespace dataflow
 }
-
-bool DivZeroAnalysis::runOnFunction(Function &F)
-{
-  outs() << "Running " << getAnalysisName() << " on " << F.getName() << "\n";
-
-  // Initializing InMap and OutMap.
-  for (inst_iterator Iter = inst_begin(F), End = inst_end(F); Iter != End; ++Iter)
-  {
-    auto Inst = &(*Iter);
-    InMap[Inst] = new Memory;
-    OutMap[Inst] = new Memory;
-  }
-
-  // The chaotic iteration algorithm is implemented inside doAnalysis().
-  doAnalysis(F);
-
-  // Check each instruction in function F for potential divide-by-zero error.
-  for (inst_iterator Iter = inst_begin(F), End = inst_end(F); Iter != End; ++Iter)
-  {
-    auto Inst = &(*Iter);
-    if (check(Inst))
-      ErrorInsts.insert(Inst);
-  }
-
-  printMap(F, InMap, OutMap);
-  outs() << "Potential Instructions by " << getAnalysisName() << ": \n";
-  for (auto Inst : ErrorInsts)
-  {
-    outs() << *Inst << "\n";
-  }
-
-  for (auto Iter = inst_begin(F), End = inst_end(F); Iter != End; ++Iter)
-  {
-    delete InMap[&(*Iter)];
-    delete OutMap[&(*Iter)];
-  }
-  return false;
-}
-
-char DivZeroAnalysis::ID = 1;
-static RegisterPass<DivZeroAnalysis> X("DivZero", "Divide-by-zero Analysis", false, false);
-// namespace dataflow

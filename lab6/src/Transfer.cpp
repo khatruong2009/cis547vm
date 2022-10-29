@@ -63,29 +63,27 @@ namespace dataflow
      */
 
     // return the type of Domain that the result is based on BinOp and memory
-    BinOp->getOpcodeName();
-
-    // get the first operand
-
-    // get the second operand
-
-    // get the operation type
-
-    // get the domain of the operands
-
-    // use domains to see what the resulting domain would be
-
-    // Non zero + non zero = maybe zero
-
-    // maybe zero + maybe zero = maybe zero
-
-    // zero + zero = zero
-
-    // zero + non zero = non zero
-
-    // zero + maybe zero = maybe zero
-
-    // maybe zero + non zero = maybe zero
+    if (BinOp->getOpcode() == Instruction::Add)
+    {
+      return Domain::add(getOrExtract(InMem, BinOp->getOperand(0)), getOrExtract(InMem, BinOp->getOperand(1)));
+    }
+    else if (BinOp->getOpcode() == Instruction::Sub)
+    {
+      return Domain::sub(getOrExtract(InMem, BinOp->getOperand(0)), getOrExtract(InMem, BinOp->getOperand(1)));
+    }
+    else if (BinOp->getOpcode() == Instruction::Mul)
+    {
+      return Domain::mul(getOrExtract(InMem, BinOp->getOperand(0)), getOrExtract(InMem, BinOp->getOperand(1)));
+    }
+    else if (BinOp->getOpcode() == Instruction::SDiv || BinOp->getOpcode() == Instruction::UDiv)
+    {
+      return Domain::div(getOrExtract(InMem, BinOp->getOperand(0)), getOrExtract(InMem, BinOp->getOperand(1)));
+    }
+    else
+    {
+      // return Domain::MaybeZero;
+      return new Domain(Domain(Domain::MaybeZero));
+    }
   }
 
   /**
@@ -100,7 +98,9 @@ namespace dataflow
     /**
      * TODO: Write your code here to evaluate Cast instruction.
      */
-    return NULL;
+
+    auto domain = getOrExtract(InMem, Cast->getOperand(0));
+    return domain;
   }
 
   // do we just write what would happen if we try to cast an int into something else for example?
@@ -123,7 +123,38 @@ namespace dataflow
      * MaybeZero for comparisons other than equality.
      */
 
-    return NULL;
+    // is equality
+    //  is false when equal
+    //  is true when equal
+
+    if (Cmp->getPredicate() == CmpInst::ICMP_EQ)
+    {
+      auto operand1 = getOrExtract(InMem, Cmp->getOperand(0));
+      auto operand2 = getOrExtract(InMem, Cmp->getOperand(1));
+
+      if (Cmp->isTrueWhenEqual())
+      {
+        return new Domain(Domain::NonZero);
+      }
+      else if (Cmp->isFalseWhenEqual())
+      {
+        return new Domain(Domain::Zero);
+      }
+    }
+    else if (Cmp->getPredicate() == CmpInst::ICMP_NE)
+    {
+      auto operand1 = getOrExtract(InMem, Cmp->getOperand(0));
+      auto operand2 = getOrExtract(InMem, Cmp->getOperand(1));
+      if (Cmp->isFalseWhenEqual())
+      {
+        return new Domain(Domain::NonZero);
+      }
+      else if (Cmp->isTrueWhenEqual())
+      {
+        return new Domain(Domain::Zero);
+      }
+    }
+    return new Domain(Domain::MaybeZero);
   }
 
   void DivZeroAnalysis::transfer(Instruction *Inst, const Memory *In, Memory &NOut)
