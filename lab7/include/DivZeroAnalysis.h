@@ -40,8 +40,7 @@ protected:
    * This function creates a transfer function that updates the Out Memory based
    * on In Memory and the instruction type/parameters.
    */
-  void transfer(Instruction *I, const Memory *In, Memory &NOut,
-                PointerAnalysis *PA, SetVector<Value *> PointerSet);
+  void transfer(Instruction *I, const Memory *In, Memory &NOut, PointerAnalysis *PA, SetVector<Value *> PointerSet);
 
   /**
    * @brief This function implements the chaotic iteration algorithm using
