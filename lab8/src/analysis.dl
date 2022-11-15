@@ -20,11 +20,11 @@
 
 
 .decl taint(inst: symbol)
-.decl edge(from: symbol, to: symbol)
-.decl path(from: symbol, to: symbol)
+.decl edge(from: symbol, to: symbol) //todo
+.decl path(from: symbol, to: symbol) //todo
 .decl sanitizer(inst: symbol)
 .decl div(denom: symbol, inst: symbol)
-.decl alarm(inst: symbol)
+.decl alarm(inst: symbol)  //todo
 
 .input taint
 .output taint
@@ -37,10 +37,21 @@
 .output alarm
 
 /* Reaching definition Analysis */
+// redefining a variable
 kill(curr_inst, old_inst) :- def(var, curr_inst), def(var, old_inst).
+// if any instruction appears in the def table, add it to the out table
+// computing out map of reaching definitions analysis
+// if a variable comes in and isn't changed, it will persist in the out map
 out(inst, inst) :- def(_, inst).
+// if any pair of inst, def_inst is in the inst table and not in the kill table, add to the out table
 out(inst, def_inst) :- in(inst, def_inst), !kill(inst, def_inst).
+// check to see if prev_inst is the same as the next prev_inst, add to the table
+// def_inst has to be in the second position of out and inst has to be in the second position of next while containing the same prev_inst value
+// add to the in table if the instructions in both out and next 
 in(inst, def_inst) :- out(prev_inst, def_inst), next(prev_inst, inst).
-
 /* Rules for taint Analysis */
 /* TODO: Add the rules for taint analysis */
+edge(I, J) :- def(V, I), use(V, J), in(J, I).
+path(I, J) :- taint(J), edge(I,J).
+path(I, J) :- path(I,J), edge(L,K).
+alarm(Y) :- path(X, Y), sanitizer(Y).

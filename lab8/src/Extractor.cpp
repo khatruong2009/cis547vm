@@ -2,13 +2,15 @@
 
 #include "llvm/IR/Instruction.h"
 
-void Extractor::addDef(const InstMapTy &InstMap, Value *X, Instruction *L) {
+void Extractor::addDef(const InstMapTy &InstMap, Value *X, Instruction *L)
+{
   if (InstMap.find(X) == InstMap.end())
     return;
   DefFile << toString(X) << "\t" << toString(L) << "\n";
 }
 
-void Extractor::addUse(const InstMapTy &InstMap, Value *X, Instruction *L) {
+void Extractor::addUse(const InstMapTy &InstMap, Value *X, Instruction *L)
+{
   if (Constant *C = dyn_cast<Constant>(X))
     return;
   if (InstMap.find(X) == InstMap.end())
@@ -16,7 +18,8 @@ void Extractor::addUse(const InstMapTy &InstMap, Value *X, Instruction *L) {
   UseFile << toString(X) << "\t" << toString(L) << "\n";
 }
 
-void Extractor::addDiv(const InstMapTy &InstMap, Value *X, Instruction *L) {
+void Extractor::addDiv(const InstMapTy &InstMap, Value *X, Instruction *L)
+{
   if (Constant *C = dyn_cast<Constant>(X))
     return;
   if (InstMap.find(X) == InstMap.end())
@@ -24,16 +27,19 @@ void Extractor::addDiv(const InstMapTy &InstMap, Value *X, Instruction *L) {
   DivFile << toString(X) << "\t" << toString(L) << "\n";
 }
 
-void Extractor::addTaint(const InstMapTy &InstMap, Instruction *L) {
+void Extractor::addTaint(const InstMapTy &InstMap, Instruction *L)
+{
   TaintFile << toString(L) << "\n";
 }
 
-void Extractor::addSanitizer(const InstMapTy &InstMap, Instruction *L) {
+void Extractor::addSanitizer(const InstMapTy &InstMap, Instruction *L)
+{
   SanitizerFile << toString(L) << "\n";
 }
 
 void Extractor::addNext(const InstMapTy &InstMap, Instruction *X,
-                        Instruction *Y) {
+                        Instruction *Y)
+{
   NextFile << toString(X) << "\t" << toString(Y) << "\n";
 };
 
@@ -41,11 +47,18 @@ void Extractor::addNext(const InstMapTy &InstMap, Instruction *X,
  * @brief Collects Datalog facts for each instruction to corresponding facts
  * file.
  */
-void Extractor::extractConstraints(const InstMapTy &InstMap, Instruction *I) {
+void Extractor::extractConstraints(const InstMapTy &InstMap, Instruction *I)
+{
   /**
    * TODO: For each predecessor P of instruction I,
    *       add a new fact in the `next` relation.
    */
+
+  auto previous = getPredecessors(I);
+  for (auto It : previous)
+  {
+    addNext(It);
+  }
 
   /**
    * TODO:
@@ -68,19 +81,57 @@ void Extractor::extractConstraints(const InstMapTy &InstMap, Instruction *I) {
    *       or sanitize respectively.
    */
 
-  if (AllocaInst *AI = dyn_cast<AllocaInst>(I)) {
+  if (AllocaInst *AI = dyn_cast<AllocaInst>(I))
+  {
     // do nothing, alloca is just a declaration.
-  } else if (StoreInst *SI = dyn_cast<StoreInst>(I)) {
+  }
+  else if (StoreInst *SI = dyn_cast<StoreInst>(I))
+  {
     // TODO: Extract facts from StoreInst
-  } else if (LoadInst *LI = dyn_cast<LoadInst>(I)) {
+    addDef(SI);
+    addUse(SI);
+  }
+  else if (LoadInst *LI = dyn_cast<LoadInst>(I))
+  {
     // TODO: Extract facts from LoadInst
-  } else if (BinaryOperator *BI = dyn_cast<BinaryOperator>(I)) {
+    addDef(LI);
+    addUse(LI);
+  }
+  else if (BinaryOperator *BI = dyn_cast<BinaryOperator>(I))
+  {
     // TODO: Extract facts from BinaryOperation
-  } else if (CallInst *CI = dyn_cast<CallInst>(I)) {
+    addDef(BI);
+    addUse(BI);
+    addDiv(BI);
+  }
+  else if (CallInst *CI = dyn_cast<CallInst>(I))
+  {
     // TODO: Extract facts from CallInst
-  } else if (CastInst *CI = dyn_cast<CastInst>(I)) {
+    if (CI)
+    {
+      addDef(CI);
+    }
+    if (isTaintedInput(CI))
+    {
+      addTaint(CI);
+    }
+    else if (isSanitizer())
+    {
+      addSanitizer(CI);
+    }
+    addUse(CI);
+    addDiv(CI);
+  }
+  else if (CastInst *CI = dyn_cast<CastInst>(I))
+  {
     // TODO: Extract facts from CastInst
-  } else if (CmpInst *CI = dyn_cast<CmpInst>(I)) {
+    addDef(CI);
+    addUse(CI);
+  }
+  else if (CmpInst *CI = dyn_cast<CmpInst>(I))
+  {
     // TODO: Extract facts from CmpInst
+    addDef(CI);
+    addUse(CI);
   }
 }
