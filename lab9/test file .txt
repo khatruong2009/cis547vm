@@ -97,9 +97,9 @@ extern "C" void __DSE_ICmp__(int R, int Op)
   MemoryTy &Mem = SI.getMemory();
   Address Register(R);
 
-  z3::expr SE2 = eval(SI.getStack().top());
-  SI.getStack().pop();
   z3::expr SE = eval(SI.getStack().top());
+  SI.getStack().pop();
+  z3::expr SE2 = eval(SI.getStack().top());
   SI.getStack().pop();
 
   if (Op == llvm::CmpInst::ICMP_EQ)
@@ -111,28 +111,13 @@ extern "C" void __DSE_ICmp__(int R, int Op)
   {
     z3::expr result = (SE != SE2);
     Mem.insert(std::make_pair(Register, result));
-  }
-  else if (Op == llvm::CmpInst::ICMP_SGE || Op == llvm::CmpInst::ICMP_UGE)
-  {
+  } else if (Op == llvm::CmpInst::ICMP_SGE || Op == llvm::CmpInst::ICMP_UGE) {
     z3::expr result = (SE >= SE2);
     Mem.insert(std::make_pair(Register, result));
   }
-  else if (Op == llvm::CmpInst::ICMP_SLE || Op == llvm::CmpInst::ICMP_ULE)
-  {
-    z3::expr result = (SE <= SE2);
-    Mem.insert(std::make_pair(Register, result));
-  } // still have to finish less than and greater than
-  else if (Op == llvm::CmpInst::ICMP_SGT || Op == llvm::CmpInst::ICMP_UGT)
-  {
-    z3::expr result = (SE > SE2);
-    Mem.insert(std::make_pair(Register, result));
-  }
-  else if (Op == llvm::CmpInst::ICMP_SLT || Op == llvm::CmpInst::ICMP_ULT)
-  {
-    z3::expr result = (SE < SE2);
-    Mem.insert(std::make_pair(Register, result));
-  }
+
 }
+
 /**
  * @brief Symbolically evaluate Binary Operation.
  *
@@ -147,34 +132,24 @@ extern "C" void __DSE_BinOp__(int R, int Op)
   MemoryTy &Mem = SI.getMemory();
   Address Register(R);
 
-  z3::expr SE2 = eval(SI.getStack().top());
-  SI.getStack().pop();
   z3::expr SE = eval(SI.getStack().top());
+  SI.getStack().pop();
+  z3::expr SE2 = eval(SI.getStack().top());
   SI.getStack().pop();
 
   if (Op == llvm::BinaryOperator::Add)
   {
     z3::expr result = SE + SE2;
     Mem.insert(std::make_pair(Register, result));
-  }
-  else if (Op == llvm::BinaryOperator::Sub)
-  {
+  } else if (Op == llvm::BinaryOperator::Sub) {
     z3::expr result = SE - SE2;
     Mem.insert(std::make_pair(Register, result));
-  }
-  else if (Op == llvm::BinaryOperator::Mul)
-  {
+  } else if (Op == llvm::BinaryOperator::Mul) {
     z3::expr result = SE * SE2;
     Mem.insert(std::make_pair(Register, result));
-  }
-  else if (Op == llvm::BinaryOperator::SDiv || Op == llvm::BinaryOperator::UDiv)
-  {
+  } else if (Op == llvm::BinaryOperator::Div) {
     z3::expr result = SE / SE2;
     Mem.insert(std::make_pair(Register, result));
-  }
-  else
-  {
-    // error message
   }
 
   // z3::expr SE = eval(SI.getInputs().find(0));
